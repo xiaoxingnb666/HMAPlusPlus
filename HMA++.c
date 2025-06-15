@@ -14,7 +14,7 @@
 #include <linux/kernel.h>   // For snprintf
 
 KPM_NAME("HMA++");
-KPM_VERSION("0.0.2");
+KPM_VERSION("0.0.3");
 KPM_LICENSE("GPLv3");
 KPM_AUTHOR("lshwjgpt");
 KPM_DESCRIPTION("TG频道:https://t.me/mizhipindao&TG群组:https://t.me/mizhichat");
@@ -169,7 +169,7 @@ static void before_mkdirat(hook_fargs4_t *args, void *udata) {
     if (strncmp(filename_kernel, TARGET_PATH, TARGET_PATH_LEN) == 0) {
         // 只拦名单，其它一律放行
         if (is_in_deny_list(filename_kernel)) {
-            pr_warn("mkdirat: Denied by deny_list to create %s\n", filename_kernel);
+            pr_warn("[HMA++]mkdirat: Denied by deny_list to create %s\n", filename_kernel);
             args->skip_origin = 1;
             args->ret = -EACCES;
         }
@@ -189,7 +189,7 @@ static void before_chdir(hook_fargs1_t *args, void *udata) {
     filename_kernel[len] = '\0';
     if (strncmp(filename_kernel, TARGET_PATH, TARGET_PATH_LEN) == 0) {
         if (is_in_deny_list(filename_kernel)) {
-            pr_warn("chdir: Denied by deny_list to %s\n", filename_kernel);
+            pr_warn("[HMA++]chdir: Denied by deny_list to %s\n", filename_kernel);
             args->skip_origin = 1;
             args->ret = -ENOENT;
         }
@@ -209,7 +209,7 @@ static void before_rmdir(hook_fargs4_t *args, void *udata) {
     // 只拦 AT_REMOVEDIR
     if ((flags & 0x200) && strncmp(filename_kernel, TARGET_PATH, TARGET_PATH_LEN) == 0) {
         if (is_in_deny_list(filename_kernel)) {
-            pr_warn("rmdir/unlinkat: Denied by deny_list to %s\n", filename_kernel);
+            pr_warn("[HMA++]rmdir/unlinkat: Denied by deny_list to %s\n", filename_kernel);
             args->skip_origin = 1;
             args->ret = -ENOENT;
         }
@@ -227,7 +227,7 @@ static void before_fstatat(hook_fargs4_t *args, void *udata) {
     filename_kernel[len] = '\0';
     if (strncmp(filename_kernel, TARGET_PATH, TARGET_PATH_LEN) == 0) {
         if (is_in_deny_list(filename_kernel)) {
-            pr_warn("fstatat/stat: Denied by deny_list to %s\n", filename_kernel);
+            pr_warn("[HMA++]fstatat/stat: Denied by deny_list to %s\n", filename_kernel);
             args->skip_origin = 1;
             args->ret = -ENOENT;
         }
@@ -236,27 +236,27 @@ static void before_fstatat(hook_fargs4_t *args, void *udata) {
 
 static long mkdir_hook_init(const char *args, const char *event, void *__user reserved) {
     hook_err_t err;
-    pr_info("HMA++ init. Hooking mkdirat, chdir, rmdir, fstatat...\n");
+    pr_info("[HMA++]HMA++ init. Hooking mkdirat, chdir, rmdir, fstatat...\n");
     err = hook_syscalln(__NR_mkdirat, 3, before_mkdirat, NULL, NULL);
     if (err) {
-        pr_err("Failed to hook mkdirat: %d\n", err);
+        pr_err("[HMA++]Failed to hook mkdirat: %d\n", err);
         return -EINVAL;
     }
     err = hook_syscalln(__NR_chdir, 1, before_chdir, NULL, NULL);
     if (err) {
-        pr_err("Failed to hook chdir: %d\n", err);
+        pr_err("[HMA++]Failed to hook chdir: %d\n", err);
         return -EINVAL;
     }
 #if defined(__NR_rmdir)
     err = hook_syscalln(__NR_rmdir, 1, before_rmdir, NULL, NULL);
     if (err) {
-        pr_err("Failed to hook rmdir: %d\n", err);
+        pr_err("[HMA++]Failed to hook rmdir: %d\n", err);
         return -EINVAL;
     }
 #elif defined(__NR_unlinkat)
     err = hook_syscalln(__NR_unlinkat, 4, before_rmdir, NULL, NULL);
     if (err) {
-        pr_err("Failed to hook unlinkat (for rmdir): %d\n", err);
+        pr_err("[HMA++]Failed to hook unlinkat (for rmdir): %d\n", err);
         return -EINVAL;
     }
 #else
@@ -266,22 +266,22 @@ static long mkdir_hook_init(const char *args, const char *event, void *__user re
 #ifdef __NR_newfstatat
     err = hook_syscalln(__NR_newfstatat, 4, before_fstatat, NULL, NULL);
     if (err) {
-        pr_err("Failed to hook newfstatat: %d\n", err);
+        pr_err("[HMA++]Failed to hook newfstatat: %d\n", err);
         return -EINVAL;
     }
 #elif defined(__NR_fstatat64)
     err = hook_syscalln(__NR_fstatat64, 4, before_fstatat, NULL, NULL);
     if (err) {
-        pr_err("Failed to hook fstatat64: %d\n", err);
+        pr_err("[HMA++]Failed to hook fstatat64: %d\n", err);
         return -EINVAL;
     }
 #endif
-    pr_info("Successfully hooked mkdirat, chdir, rmdir, fstatat.\n");
+    pr_info("[HMA++]Successfully hooked mkdirat, chdir, rmdir, fstatat.\n");
     return 0;
 }
 
 static long mkdir_hook_exit(void *__user reserved) {
-    pr_info("HMA++ exit. Unhooking mkdirat, chdir, rmdir, fstatat...\n");
+    pr_info("[HMA++]HMA++ exit. Unhooking mkdirat, chdir, rmdir, fstatat...\n");
     unhook_syscalln(__NR_mkdirat, before_mkdirat, NULL);
     unhook_syscalln(__NR_chdir, before_chdir, NULL);
 #if defined(__NR_rmdir)
@@ -294,7 +294,7 @@ static long mkdir_hook_exit(void *__user reserved) {
 #elif defined(__NR_fstatat64)
     unhook_syscalln(__NR_fstatat64, before_fstatat, NULL);
 #endif
-    pr_info("Successfully unhooked all syscalls.\n");
+    pr_info("[HMA++]Successfully unhooked all syscalls.\n");
     return 0;
 }
 
