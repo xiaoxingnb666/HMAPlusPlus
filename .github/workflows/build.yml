@@ -1,0 +1,31 @@
+name: Build KPM
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+      
+    - name: Setup Android NDK
+      uses: android-actions/setup-android-ndk@v1
+      with:
+        ndk-version: '25b'
+        
+    - name: Build KPM module
+      run: |
+        make NDK_HOME=$ANDROID_NDK_HOME
+        
+    - name: Upload artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: HMAPlusPlus-module
+        path: '*.kpm'
+        retention-days: 7
