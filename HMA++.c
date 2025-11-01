@@ -24,8 +24,7 @@ KPM_DESCRIPTION("TG频道:https://t.me/mizhipindao&TG群组:https://t.me/mizhich
 
 // 内置 deny list
 static const char *deny_list[] = {
-    "com.proximabeta.mf.uamo",
-    "com.tencent.mf.uam",
+   
     "icu.nullptr.nativetest",
     "com.nb",
     "com.tencent.news",
